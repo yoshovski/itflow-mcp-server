@@ -313,3 +313,24 @@ tests/
 
 Distributed under the [MIT License](LICENSE). See the `LICENSE` file for full
 terms.
+
+## Fork container images
+
+This fork builds and tests the container with GitHub Actions. Pull requests test
+and build without publishing. Pushes to `main` and manual runs publish to
+`ghcr.io/yoshovski/itflow-mcp-server` using the workflow's built-in GitHub token;
+no registry password or ITFlow credentials are required.
+
+Images carry `latest` on the default branch and an immutable-source
+`sha-<full-commit>` tag. Pin the resulting image digest in production Compose.
+The initial build targets Linux amd64 (the lab host).
+
+```yaml
+services:
+  itflow-mcp:
+    image: ghcr.io/yoshovski/itflow-mcp-server:latest
+```
+
+Keep the remaining environment, authentication and network configuration from
+your deployment Compose. This image does not constitute a security review;
+ITFlow API query strings and HTTP error messages must be treated as sensitive.
