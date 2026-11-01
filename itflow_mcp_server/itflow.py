@@ -108,11 +108,11 @@ class ITFlowClient:
                     method, path, params=query, json=json_body
                 )
             except httpx.HTTPError as exc:
-                last_error = exc
+                last_error = ITFlowError("ITFlow transport request failed.")
                 if attempt < attempts:
                     await asyncio.sleep(0.5 * attempt)
                     continue
-                raise ITFlowError(f"Request to ITFlow failed: {exc}") from exc
+                raise ITFlowError("ITFlow transport request failed.") from None
 
             if response.status_code in (429, 500, 502, 503, 504) and attempt < attempts:
                 last_error = ITFlowError(
@@ -128,18 +128,20 @@ class ITFlowClient:
                     "ITFlow rejected the API key (HTTP 401). "
                     "Check ITFLOW_API_KEY and that the key has not expired.",
                     http_status=401,
-                    payload=payload,
+                    payload=None,
                 )
             if response.status_code >= 400:
                 raise ITFlowError(
-                    f"ITFlow returned HTTP {response.status_code}: "
-                    f"{_short(payload)}",
+                    f"ITFlow returned HTTP {response.status_code}.",
                     http_status=response.status_code,
-                    payload=payload,
+                    payload=None,
                 )
             if isinstance(payload, dict) and str(payload.get("success", "")).lower() == "false":
-                message = payload.get("message") or "Unknown error"
-                raise ITFlowError(str(message), http_status=response.status_code, payload=payload)
+                # Error bodies can echo URLs, credentials or HTML diagnostics.
+                # Keep them out of the tool response and attached exception payload.
+                message = ("Non-JSON response from ITFlow." if payload.get("_non_json")
+                           else "ITFlow reported an unsuccessful operation.")
+                raise ITFlowError(message, http_status=response.status_code)
             return payload if isinstance(payload, dict) else {"success": "True", "data": payload}
 
         raise ITFlowError(f"Request to ITFlow failed after {attempts} attempts: {last_error}")
@@ -149,13 +151,4 @@ class ITFlowClient:
         try:
             return response.json()
         except ValueError:
-            body = response.text or ""
-            return {"success": "False", "message": f"Non-JSON response: {body[:300]}"}
-
-
-def _short(payload: Any) -> str:
-    if isinstance(payload, dict):
-        message = payload.get("message")
-        if message:
-            return str(message)[:300]
-    return str(payload)[:300]
+            return {"success": "False", "_non_json": True}

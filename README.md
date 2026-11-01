@@ -334,3 +334,15 @@ services:
 Keep the remaining environment, authentication and network configuration from
 your deployment Compose. This image does not constitute a security review;
 ITFlow API query strings and HTTP error messages must be treated as sensitive.
+
+### Credential-safe logging and errors
+
+HTTPX/HTTPCore request and debug logs are suppressed below WARNING, even when
+MCP_LOG_LEVEL is DEBUG. Application log formatting redacts configured ITFlow,
+decryption and MCP tokens, including URL-encoded variants and tracebacks.
+Uvicorn access logging is disabled to avoid recording incoming query strings.
+Transport exceptions and upstream error bodies are not returned verbatim:
+failures report a generic message and HTTP status where available, without
+attaching the raw response payload. Successful record responses are unchanged.
+Configure the upstream ITFlow web server to omit query strings and Referer from
+its access logs too: ITFlow GET authentication still uses a query parameter.
