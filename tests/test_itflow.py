@@ -121,7 +121,7 @@ async def test_credentials_post_includes_decrypt_password():
     assert seen["body"]["api_key_decrypt_password"] == "test-pwd"
 
 
-async def test_success_false_raises_with_message():
+async def test_success_false_raises_without_upstream_message():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -133,7 +133,7 @@ async def test_success_false_raises_with_message():
 
     client = client_with(handler)
     try:
-        with pytest.raises(ITFlowError, match="No resource"):
+        with pytest.raises(ITFlowError, match="unsuccessful operation"):
             await client.read("clients", {"client_name": "Missing"})
     finally:
         await client.aclose()

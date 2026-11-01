@@ -31,12 +31,8 @@ from .server import build_server
 
 
 def _setup_logging() -> None:
-    level = os.environ.get("MCP_LOG_LEVEL", "INFO").upper()
-    logging.basicConfig(
-        level=getattr(logging, level, logging.INFO),
-        format="%(asctime)s %(name)s %(levelname)s %(message)s",
-        stream=sys.stderr,
-    )
+    from .logging_security import configure_logging
+    configure_logging()
 
 
 def _print_version() -> None:
@@ -156,7 +152,7 @@ def _run_http(config: Config) -> int:
         f"({len(valid_keys)} API key(s) configured)",
         file=sys.stderr,
     )
-    uvicorn.run(app, host=config.http_host, port=config.http_port, log_level="info")
+    uvicorn.run(app, host=config.http_host, port=config.http_port, log_level="info", access_log=False)
     return 0
 
 
