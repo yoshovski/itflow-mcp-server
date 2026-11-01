@@ -39,9 +39,9 @@ async def test_errors_do_not_expose_url_or_response_secrets(kind):
 
 def test_formatter_redacts_secrets_in_messages_and_tracebacks(monkeypatch):
     secret = 'dummy/secret+key'
-    monkeypatch.setenv('ITFLOW_API_KEY', secret)
+    monkeypatch.setenv('ITFLOW_API_KEY', '  ' + secret + '  ')
     monkeypatch.setenv('ITFLOW_API_KEY_PASSWORD', 'dummy-password')
-    monkeypatch.setenv('MCP_API_KEY', 'dummy-mcp-one,dummy-mcp-two')
+    monkeypatch.setenv('MCP_API_KEY', ' dummy-mcp-one , dummy-mcp-two ')
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)
     handler.setFormatter(CredentialFormatter('%(message)s'))
