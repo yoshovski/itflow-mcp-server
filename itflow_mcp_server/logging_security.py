@@ -12,6 +12,8 @@ def credential_values() -> tuple[str, ...]:
         'ITFLOW_API_KEY', 'ITFLOW_API_KEY_PASSWORD', 'MCP_API_KEY'
     )]
     values.extend(os.environ.get('MCP_API_KEY', '').split(','))
+    # Match Config's whitespace normalization, including rotated comma-separated keys.
+    values.extend(value.strip() for value in tuple(values))
     variants = set()
     for value in values:
         if value:
